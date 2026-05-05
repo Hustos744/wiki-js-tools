@@ -10,6 +10,15 @@ from urllib.parse import unquote, urlparse
 LINK_RE = re.compile(r"(?<!!)\[([^\]]+)\]\(([^)\n]*(?:\([^)\n]*\)[^)\n]*)*)\)")
 HTML_HREF_RE = re.compile(r'(<a\b[^>]*?\bhref=")([^"]+)(")', re.IGNORECASE)
 COMPOSE_DIR = None
+HOMOGLYPH_TABLE = str.maketrans(
+    {
+        "А": "A", "В": "B", "Е": "E", "І": "I", "К": "K", "М": "M",
+        "Н": "H", "О": "O", "Р": "P", "С": "C", "Т": "T", "Х": "X",
+        "У": "Y", "а": "a", "в": "b", "е": "e", "і": "i", "к": "k",
+        "м": "m", "н": "h", "о": "o", "р": "p", "с": "c", "т": "t",
+        "х": "x", "у": "y",
+    }
+)
 
 
 def run_psql(sql, *, input_sql=None):
@@ -160,6 +169,23 @@ def normalize_text(text):
     return text.strip().casefold()
 
 
+def comparable_slug(value):
+    value = normalize_path(value)[0]
+    value = value.translate(HOMOGLYPH_TABLE)
+    value = re.sub(r"[^0-9a-zA-ZА-Яа-яЇїЄєҐґ/]+", "-", value)
+    value = re.sub(r"-+", "-", value)
+    return value.strip("-").casefold()
+
+
+def common_prefix_len(left, right):
+    count = 0
+    for left_char, right_char in zip(left, right):
+        if left_char != right_char:
+            break
+        count += 1
+    return count
+
+
 def dirname(path):
     if "/" not in path:
         return ""
@@ -241,13 +267,27 @@ def resolve_link(current_page, label, href, indexes, allowed_hosts):
 
     if "/" in candidate:
         parent, leaf = candidate.rsplit("/", 1)
+        parent_key = comparable_slug(parent)
+        leaf_key = comparable_slug(leaf)
         prefix_matches = [
             p for p in by_path.values()
-            if normalize_path(dirname(p["path"]))[0] == parent
-            and normalize_path(p["path"].rsplit("/", 1)[-1])[0].startswith(leaf)
+            if comparable_slug(dirname(p["path"])) == parent_key
+            and comparable_slug(p["path"].rsplit("/", 1)[-1]).startswith(leaf_key)
         ]
         if len(prefix_matches) == 1:
             return page_url(prefix_matches[0]["path"], anchor)
+
+        fuzzy_matches = []
+        for page in by_path.values():
+            page_parent = comparable_slug(dirname(page["path"]))
+            page_leaf = comparable_slug(page["path"].rsplit("/", 1)[-1])
+            if page_parent != parent_key:
+                continue
+            prefix_len = common_prefix_len(leaf_key, page_leaf)
+            if prefix_len >= 45 and prefix_len >= min(len(leaf_key), len(page_leaf)) * 0.72:
+                fuzzy_matches.append(page)
+        if len(fuzzy_matches) == 1:
+            return page_url(fuzzy_matches[0]["path"], anchor)
 
     label_matches = by_title.get(normalize_text(label), [])
     if len(label_matches) == 1:
