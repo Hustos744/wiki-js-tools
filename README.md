@@ -105,6 +105,42 @@ To also list links that are resolvable but non-canonical and could be fixed by
 --include-fixable
 ```
 
+## Monthly Backup
+
+Create one backup archive manually:
+
+```bash
+sudo /opt/prod/wiki-js-tools/backup_wikijs.sh --compose-dir /opt/prod/wiki-js --retention-days 92
+```
+
+The archive is written to `/opt/prod/wiki-js/backups/` by default and includes:
+
+- PostgreSQL SQL dump
+- compose file
+- `wiki-data/`
+
+It intentionally excludes live `db-data/`.
+
+Install cron automatically:
+
+```bash
+sudo chmod +x /opt/prod/wiki-js-tools/backup_wikijs.sh /opt/prod/wiki-js-tools/install_monthly_backup_cron.sh
+sudo /opt/prod/wiki-js-tools/install_monthly_backup_cron.sh --compose-dir /opt/prod/wiki-js --tools-dir /opt/prod/wiki-js-tools --retention-days 92
+```
+
+Or add cron manually for a monthly backup at 12:00 on the first day of every
+month:
+
+```bash
+sudo crontab -e
+```
+
+Add:
+
+```cron
+0 12 1 * * /opt/prod/wiki-js-tools/backup_wikijs.sh --compose-dir /opt/prod/wiki-js --retention-days 92 >> /opt/prod/wiki-js/backups/monthly-backup.log 2>&1
+```
+
 ## Windows local example
 
 From `D:\Projects\codex_dir`:
