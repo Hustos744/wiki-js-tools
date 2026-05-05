@@ -19,7 +19,39 @@ def is_skipped_href(href):
         return "non-page-scheme"
     if lowered.startswith(("/_assets/", "/assets/", "/uploads/", "/attachments")):
         return "asset"
+    if lowered.startswith(("/wiki/download/attachments/", "wiki/download/attachments/")):
+        return "asset"
+    if "/wiki/download/attachments/" in lowered:
+        return "asset"
+    if lowered.endswith((
+        ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico",
+        ".mp4", ".mov", ".avi", ".mkv", ".webm", ".mp3", ".wav",
+        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
+        ".zip", ".7z", ".rar", ".tar", ".gz",
+    )):
+        return "asset"
+    if is_code_like_href(href):
+        return "code-like"
     return ""
+
+
+def is_code_like_href(href):
+    href = (href or "").strip()
+    if not href:
+        return False
+    if len(href) <= 2 and href.isdigit():
+        return True
+    if any(token in href for token in ("SELECT%20", "WHERE%20", "HKLM", "Win32", ".NETFramework", "//")):
+        return True
+    if href.startswith(("'", '"')) or href.endswith(("'", '"')):
+        return True
+    if "," in href and "/" not in href:
+        return True
+    if "%5B" in href or "%5D" in href:
+        return True
+    if "/" not in href and "." not in href and "%" not in href:
+        return True
+    return False
 
 
 def possible_matches(candidate, indexes):
