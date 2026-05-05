@@ -13,6 +13,9 @@ or environment files with secrets.
   and the cached HTML in `pages.render`.
 - `restore_wikijs_pages_from_dump.py` restores `pages.content` and
   `pages.render` from a pages-only `pg_dump`.
+- `audit_wikijs_links.py` scans internal page links and writes problematic
+  links to a TSV report. It does not perform HTTP requests and does not
+  download linked files.
 
 ## Requirements
 
@@ -82,6 +85,24 @@ If you need to roll back the page content/render fields:
 ```bash
 python3 /opt/wiki-js-tools/restore_wikijs_pages_from_dump.py /opt/wiki-js/backups/pages-before-link-fix-YYYYMMDD-HHMMSS.sql --compose-dir /opt/wiki-js
 docker compose --project-directory /opt/wiki-js restart wiki
+```
+
+## Audit Internal Links
+
+Create a report of problematic internal page links:
+
+```bash
+python3 /opt/wiki-js-tools/audit_wikijs_links.py --compose-dir /opt/wiki-js --host wikijs.csirt.local:330 --output /opt/wiki-js/backups/link-audit-$(date +%Y%m%d-%H%M%S).tsv
+```
+
+This script only reads the Wiki.js database. It does not open links over HTTP
+and does not download files.
+
+To also list links that are resolvable but non-canonical and could be fixed by
+`fix_wikijs_links.py`, add:
+
+```bash
+--include-fixable
 ```
 
 ## Windows local example
