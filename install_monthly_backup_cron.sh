@@ -13,7 +13,8 @@ Usage:
 
 Installs a root crontab entry that runs Wiki.js backup on the 1st day of every
 month at 12:00. The backup archive uses a stable filename, so every new monthly
-run replaces the previous archive.
+run replaces the previous archive. The backup script creates a full cold backup,
+so the Wiki.js stack is stopped while the archive is being created.
 EOF
 }
 

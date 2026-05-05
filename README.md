@@ -107,7 +107,7 @@ To also list links that are resolvable but non-canonical and could be fixed by
 
 ## Monthly Backup
 
-Create or replace the monthly backup archive manually:
+Create or replace the full monthly backup archive manually:
 
 ```bash
 sudo /opt/prod/wiki-js-tools/backup_wikijs.sh --compose-dir /opt/prod/wiki-js
@@ -116,17 +116,17 @@ sudo /opt/prod/wiki-js-tools/backup_wikijs.sh --compose-dir /opt/prod/wiki-js
 The archive is written to `/opt/prod/wiki-js/backups/wiki-js-backup-monthly.tar.gz`
 by default and includes:
 
-- PostgreSQL SQL dump
-- compose file
+- `db-data/`
 - `wiki-data/`
+- compose file
+- restore notes
 
-It intentionally excludes live `db-data/`.
+The script stops the Docker Compose stack while the archive is being created,
+then starts it again. This makes the PostgreSQL files consistent and includes
+Wiki.js `assetData`, including large uploaded files that make `pg_dump` fail.
+
 Every new run replaces the previous `wiki-js-backup-monthly.tar.gz`, so the
 backup folder keeps one current monthly archive plus the log file.
-
-If a full `pg_dump` fails on Wiki.js `assetData`, the backup script retries with
-`assetData` table data excluded and records that in `RESTORE.md` inside the
-archive. The archive still includes `wiki-data/`.
 
 Install cron automatically:
 
