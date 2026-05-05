@@ -12,7 +12,7 @@ Usage:
   install_monthly_backup_cron.sh [--compose-dir /opt/prod/wiki-js] [--tools-dir /opt/prod/wiki-js-tools] [--archive-name wiki-js-backup-monthly.tar.gz]
 
 Installs a root crontab entry that runs Wiki.js backup on the 1st day of every
-month at 12:00. The backup archive uses a stable filename, so every new monthly
+month at 02:00. The backup archive uses a stable filename, so every new monthly
 run replaces the previous archive. The backup script creates a full cold backup,
 so the Wiki.js stack is stopped while the archive is being created.
 EOF
@@ -59,7 +59,7 @@ fi
 
 mkdir -p "$COMPOSE_DIR/backups"
 
-CRON_LINE="0 12 1 * * $BACKUP_SCRIPT --compose-dir $COMPOSE_DIR --archive-name $ARCHIVE_NAME >> $LOG_PATH 2>&1 $CRON_MARKER"
+CRON_LINE="0 2 1 * * $BACKUP_SCRIPT --compose-dir $COMPOSE_DIR --archive-name $ARCHIVE_NAME >> $LOG_PATH 2>&1 $CRON_MARKER"
 
 TMP_CRON="$(mktemp)"
 trap 'rm -f "$TMP_CRON"' EXIT

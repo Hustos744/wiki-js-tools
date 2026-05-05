@@ -135,7 +135,7 @@ sudo chmod +x /opt/prod/wiki-js-tools/backup_wikijs.sh /opt/prod/wiki-js-tools/i
 sudo /opt/prod/wiki-js-tools/install_monthly_backup_cron.sh --compose-dir /opt/prod/wiki-js --tools-dir /opt/prod/wiki-js-tools
 ```
 
-Or add cron manually for a monthly backup at 12:00 on the first day of every
+Or add cron manually for a monthly backup at 02:00 on the first day of every
 month:
 
 ```bash
@@ -145,7 +145,7 @@ sudo crontab -e
 Add:
 
 ```cron
-0 12 1 * * /opt/prod/wiki-js-tools/backup_wikijs.sh --compose-dir /opt/prod/wiki-js >> /opt/prod/wiki-js/backups/monthly-backup.log 2>&1
+0 2 1 * * /opt/prod/wiki-js-tools/backup_wikijs.sh --compose-dir /opt/prod/wiki-js >> /opt/prod/wiki-js/backups/monthly-backup.log 2>&1
 ```
 
 ## Windows local example
