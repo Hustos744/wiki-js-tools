@@ -3,16 +3,17 @@ set -euo pipefail
 
 COMPOSE_DIR="/opt/prod/wiki-js"
 TOOLS_DIR="/opt/prod/wiki-js-tools"
-RETENTION_DAYS=92
+ARCHIVE_NAME="wiki-js-backup-monthly.tar.gz"
 CRON_MARKER="# wiki-js-tools monthly backup"
 
 usage() {
   cat <<'EOF'
 Usage:
-  install_monthly_backup_cron.sh [--compose-dir /opt/prod/wiki-js] [--tools-dir /opt/prod/wiki-js-tools] [--retention-days 92]
+  install_monthly_backup_cron.sh [--compose-dir /opt/prod/wiki-js] [--tools-dir /opt/prod/wiki-js-tools] [--archive-name wiki-js-backup-monthly.tar.gz]
 
 Installs a root crontab entry that runs Wiki.js backup on the 1st day of every
-month at 12:00 and keeps archives for approximately 3 months.
+month at 12:00. The backup archive uses a stable filename, so every new monthly
+run replaces the previous archive.
 EOF
 }
 
@@ -26,8 +27,12 @@ while [[ $# -gt 0 ]]; do
       TOOLS_DIR="$2"
       shift 2
       ;;
+    --archive-name)
+      ARCHIVE_NAME="$2"
+      shift 2
+      ;;
     --retention-days)
-      RETENTION_DAYS="$2"
+      echo "Note: --retention-days is ignored; monthly backup uses one stable archive file." >&2
       shift 2
       ;;
     -h|--help)
@@ -53,7 +58,7 @@ fi
 
 mkdir -p "$COMPOSE_DIR/backups"
 
-CRON_LINE="0 12 1 * * $BACKUP_SCRIPT --compose-dir $COMPOSE_DIR --retention-days $RETENTION_DAYS >> $LOG_PATH 2>&1 $CRON_MARKER"
+CRON_LINE="0 12 1 * * $BACKUP_SCRIPT --compose-dir $COMPOSE_DIR --archive-name $ARCHIVE_NAME >> $LOG_PATH 2>&1 $CRON_MARKER"
 
 TMP_CRON="$(mktemp)"
 trap 'rm -f "$TMP_CRON"' EXIT
